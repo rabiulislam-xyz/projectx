@@ -21,8 +21,7 @@ from rest_framework.documentation import include_docs_urls
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from projectx.views import home
-
+from projectx.views import home, ping
 
 api_v1_urls = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -36,5 +35,6 @@ urlpatterns = [
     path('api/v1/docs/', include_docs_urls(title='API Docs V1',
                                            patterns=[path('api/v1/', include(api_v1_urls))],
                                            permission_classes=[AllowAny]), name='api-docs-url'),
+    path('ping/', ping),
     path('', home),
 ]

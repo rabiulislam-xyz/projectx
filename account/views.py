@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, filters
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
 from account.serializers import UserSerializer
 from projectx.permissions import IsOwnAccount
@@ -23,3 +25,11 @@ class UserViewSet(viewsets.ModelViewSet):
             self.permission_classes = (IsOwnAccount,)
 
         return super().get_permissions()
+
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        """
+        Get the authenticated user's details.
+        """
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)

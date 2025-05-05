@@ -168,7 +168,23 @@ SIMPLE_JWT = {
 }
 
 # cors settings
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5000",
+    "http://localhost:5173",
+    "http://0.0.0.0:5000",
+    "http://0.0.0.0:5173",
+]
+
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
 
 LOGGING = {
     'version': 1,
