@@ -13,15 +13,11 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.documentation import include_docs_urls
-from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from projectx.views import home, ping
+from projectx.views import ping
 
 api_v1_urls = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -30,11 +26,7 @@ api_v1_urls = [
 ]
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('api/ping/', ping),
+    path('api/superAmdin/', admin.site.urls),  # url is incorrect intentionally
     path('api/v1/', include(api_v1_urls)),
-    path('api/v1/docs/', include_docs_urls(title='API Docs V1',
-                                           patterns=[path('api/v1/', include(api_v1_urls))],
-                                           permission_classes=[AllowAny]), name='api-docs-url'),
-    path('ping/', ping),
-    path('', home),
 ]

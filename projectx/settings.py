@@ -148,6 +148,26 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+DATETIME_INPUT_FORMATS = [
+    "%d/%m/%Y %H:%M:%S",  # '10/25/2006 14:30:59'
+    "%d/%m/%Y %H:%M:%S.%f",  # '10/25/2006 14:30:59.000200'
+    "%d/%m/%Y %H:%M",  # '10/25/2006 14:30'
+    "%d/%m/%Y",  # '10/25/2006'
+    "%d/%m/%y %H:%M:%S",  # '10/25/06 14:30:59'
+    "%d/%m/%y %H:%M:%S.%f",  # '10/25/06 14:30:59.000200'
+    "%d/%m/%y %H:%M",  # '10/25/06 14:30'
+    "%d/%m/%y",  # '10/25/06'
+    "%Y-%m-%d %H:%M:%S",  # '2006-10-25 14:30:59'
+    "%Y-%m-%d %H:%M:%S.%f",  # '2006-10-25 14:30:59.000200'
+    "%Y-%m-%dT%H:%M:%S",  # '2024-01-23T18:00:00.000Z'  ISO
+    "%Y-%m-%dT%H:%M:%S.%f",  # '2024-01-23T18:00:00.000Z'  ISO
+    "%Y-%m-%dT%H:%M:%S.%f%z",  # '2024-01-23T18:00:00.000Z'  ISO
+    "%Y-%m-%d %H:%M",  # '2006-10-25 14:30'
+    "%Y-%m-%d",  # '2006-10-25'
+]
+
+DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
+DATE_FORMAT = "%Y-%m-%d"
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -157,9 +177,16 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+    ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20
+    'PAGE_SIZE': 20,
+    "EXCEPTION_HANDLER": "projectx.exceptions.custom_exception_handler",
+    "DATETIME_INPUT_FORMATS": DATETIME_INPUT_FORMATS,
+    "DATE_INPUT_FORMATS": DATETIME_INPUT_FORMATS,
+    "DATETIME_FORMAT": DATETIME_FORMAT,
+    "DATE_FORMAT": DATE_FORMAT,
 }
 
 SIMPLE_JWT = {
@@ -168,14 +195,14 @@ SIMPLE_JWT = {
 }
 
 # cors settings
-# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5000",
-    "http://localhost:5173",
-    "http://0.0.0.0:5000",
-    "http://0.0.0.0:5173",
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5000",
+#     "http://localhost:5173",
+#     "http://0.0.0.0:5000",
+#     "http://0.0.0.0:5173",
+# ]
 
 CORS_ALLOW_METHODS = (
     "DELETE",
@@ -186,35 +213,58 @@ CORS_ALLOW_METHODS = (
     "PUT",
 )
 
+# --- LOGGING ---
+LOG_REQUESTS = True
+LOG_USER_ATTRIBUTE = "email"
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        "json": {
-            '()': 'json_log_formatter.JSONFormatter',
-        }
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'json',
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "filters": {
+        "request_id": {
+            "()": "projectx.logging.RequestIDFilter"
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
+
+    "formatters": {
+        "verbose": {
+            "class": "projectx.logging.IgnoreMissingFormatter",
+            "format": "[%(schema_name)s] [%(asctime)s] %(levelname)s %(message)s  "
+                      "[%(request_id)s %(name)s:%(lineno)s]",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
-        'django.request': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
+    },
+
+    "handlers": {
+        "file": {
+            "level": "INFO",
+            "class": "projectx.logging.RotatingFileHandlerMakeDir",
+            "filename": "logs/info.log",
+            "backupCount": 500,
+            "maxBytes": 100 * 1024 * 1024,
+            "formatter": "verbose",
+            "filters": ["request_id"],
         },
-        '': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
+    },
+
+    "loggers": {
+        "django": {
+            "handlers": ["file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "celery.beat": {
+            "handlers": ["file"],
+            "level": "DEBUG",
+        },
+        "": {
+            "handlers": ["file"],
+            "level": "INFO",
         },
     },
 }
